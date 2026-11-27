@@ -49,7 +49,8 @@ const es = {
 
   'practice.title': 'Practicar', 'practice.modeLegend': '1. Elige el juego', 'practice.sourceLegend': '2. ¿Qué verbos?',
   'practice.optionsLegend': '3. Opciones', 'practice.howMany': '¿Cuántos verbos?', 'practice.all': 'Todos ({n})',
-  'practice.showTimer': 'Mostrar cronómetro (modo examen)', 'practice.start': '¡Empezar!',
+  'practice.showTimer': 'Mostrar cronómetro (modo examen)',
+  'practice.timerAudioHelp': 'Sin audios durante la partida para no perder tiempo. Podrás escuchar todos los verbos al terminar.', 'practice.start': '¡Empezar!',
   'practice.summary': 'Vas a practicar {n} verbos, sin repetir y en orden aleatorio.',
   'practice.noneVisible': 'Todavía no hay verbos abiertos. Prueba con "Todo el listado" o espera a que tu profe abra una semana.',
   'practice.noneSelected': 'Elige al menos una semana.', 'practice.noWeeks': 'Esta lista no tiene semanas.',
@@ -219,7 +220,8 @@ const en = {
 
   'practice.title': 'Practise', 'practice.modeLegend': '1. Choose the game', 'practice.sourceLegend': '2. Which verbs?',
   'practice.optionsLegend': '3. Options', 'practice.howMany': 'How many verbs?', 'practice.all': 'All ({n})',
-  'practice.showTimer': 'Show stopwatch (exam mode)', 'practice.start': 'Start!',
+  'practice.showTimer': 'Show stopwatch (exam mode)',
+  'practice.timerAudioHelp': 'No audio during the game so you do not lose time. You can listen to all the verbs at the end.', 'practice.start': 'Start!',
   'practice.summary': 'You\'re going to practise {n} verbs, in random order and without repeats.',
   'practice.noneVisible': 'There are no open verbs yet. Try "The whole list" or wait for your teacher to open a week.',
   'practice.noneSelected': 'Choose at least one week.', 'practice.noWeeks': 'This list has no weeks.',

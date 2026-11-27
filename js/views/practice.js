@@ -19,7 +19,12 @@ function poolFor(cfg) {
 }
 
 const isEn = (f) => f !== 'meaning';
-const speakBtn = (text) => (prefs.speech && canSpeak()
+// Con cronómetro (modo examen) no hay audio durante la partida para no perder tiempo;
+// se puede escuchar todo en el resumen final.
+const quizAudio = () => prefs.speech && !setup.timer;
+const listenBtn = (text) => (canSpeak()
+  ? `<button type="button" class="btn-icon" data-speak="${esc(text)}" aria-label="${esc(t('common.listen'))}: ${esc(text)}">🔊</button>` : '');
+const speakBtn = (text) => (quizAudio() && canSpeak()
   ? `<button type="button" class="btn-icon" data-speak="${esc(text)}" aria-label="${esc(t('common.listen'))}: ${esc(text)}">🔊</button>` : '');
 
 function onSpeakClick(e) {
@@ -85,7 +90,7 @@ function renderSetup(root) {
           <select id="count" name="count"></select>
         </div>
         <label class="switch-row"><input type="checkbox" name="timer" role="switch" ${setup.timer ? 'checked' : ''}>
-          <span>⏱ ${esc(t('practice.showTimer'))}</span></label>
+          <span>⏱ ${esc(t('practice.showTimer'))}<small class="help block">${esc(t('practice.timerAudioHelp'))}</small></span></label>
       </fieldset>
 
       <p id="pool-msg" class="callout" aria-live="polite"></p>
@@ -326,7 +331,7 @@ function finishItem(item) {
   const btn = $('#qbtn', root);
   btn.textContent = last ? t('quiz.seeResults') + ' 🏁' : t('quiz.next') + ' →';
   btn.focus();
-  if (prefs.speech && prefs.autoSpeak) speak(`${v.infinitive}, ${v.past}, ${v.participle}`);
+  if (quizAudio() && prefs.autoSpeak) speak(`${v.infinitive}, ${v.past}, ${v.participle}`);
 }
 
 function next() {
@@ -390,7 +395,7 @@ async function finishQuiz() {
             <span class="r-icon" aria-label="${esc(t('results.status.' + i.result))}">${icon[i.result]}</span>
             <span class="r-text"><strong lang="en">${esc(showAlts(i.verb.infinitive))}</strong> – <span lang="en">${esc(showAlts(i.verb.past))} – ${esc(showAlts(i.verb.participle))}</span>
             <span class="muted">· ${esc(showAlts(i.verb.meaning))}</span></span>
-            ${speakBtn(`${i.verb.infinitive}, ${i.verb.past}, ${i.verb.participle}`)}
+            ${listenBtn(`${i.verb.infinitive}, ${i.verb.past}, ${i.verb.participle}`)}
           </li>`).join('')}
       </ul>
     </section>`;
