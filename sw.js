@@ -1,6 +1,6 @@
 // ---------- Service Worker de Verbify (app instalable y uso sin conexión) ----------
 // Sube el número de versión cada vez que publiques cambios para que los móviles se actualicen.
-const VERSION = 'verbify-v1.1.0';
+const VERSION = 'verbify-v1.2.0';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/styles.css',
   'js/app.js', 'js/config.js', 'js/state.js', 'js/i18n.js', 'js/ui.js', 'js/utils.js',
@@ -11,7 +11,7 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (e) => {
-  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (e) => {
@@ -34,8 +34,11 @@ self.addEventListener('fetch', (e) => {
   if (!cacheable) return;
 
   // Red primero (para tener siempre lo último) y, si no hay conexión, la copia guardada
+  // Archivos propios: siempre se comprueba con el servidor si hay versión nueva
+  const sameOrigin = url.origin === self.location.origin;
+  const net = sameOrigin && req.mode !== 'navigate' ? fetch(req.url, { cache: 'no-cache' }) : fetch(req);
   e.respondWith(
-    fetch(req)
+    net
       .then((res) => {
         if (res && (res.ok || res.type === 'opaque')) {
           const copy = res.clone();

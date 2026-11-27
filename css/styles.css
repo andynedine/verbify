@@ -565,3 +565,7 @@ input[type="radio"], input[type="checkbox"] { width: 22px; height: 22px; accent-
 .main > .back-link { align-self: flex-start; }
 /* El foco se lleva al título al cambiar de pantalla (lectores de pantalla); sin marco visible */
 h1[tabindex="-1"]:focus { outline: none; }
+
+/* Selector de voz */
+.voice-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
+.voice-row select { flex: 1 1 200px; min-width: 0; }

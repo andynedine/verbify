@@ -1,7 +1,7 @@
 // ---------- Arranque, menú y navegación ----------
 import { loadBackend, loadAll, state, prefs, isAdmin, isDemo, api } from './state.js';
 import { t, applyLang } from './i18n.js';
-import { esc } from './utils.js';
+import { esc, setPreferredVoice } from './utils.js';
 import { $, $$, showError, loading } from './ui.js';
 import * as authView from './views/auth.js';
 import * as homeView from './views/home.js';
@@ -101,6 +101,7 @@ export async function reloadSession(goTo = '#/') {
 }
 
 async function start() {
+  setPreferredVoice(prefs.voice);
   applyTheme();
   applyLang();
   matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme);

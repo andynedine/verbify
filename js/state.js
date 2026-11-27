@@ -23,7 +23,7 @@ export const state = {
 
 // ---------- Preferencias (solo en este dispositivo) ----------
 const PREFS_KEY = 'verbify-prefs';
-const DEFAULT_PREFS = { lang: 'es', theme: 'auto', speech: true, autoSpeak: false, timer: false, anim: true };
+const DEFAULT_PREFS = { lang: 'es', theme: 'auto', speech: true, autoSpeak: false, voice: '', timer: false, anim: true };
 export const prefs = { ...DEFAULT_PREFS };
 try { Object.assign(prefs, JSON.parse(localStorage.getItem(PREFS_KEY) || '{}')); } catch { /* ignore */ }
 export function savePrefs(patch) {

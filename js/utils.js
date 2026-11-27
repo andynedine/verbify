@@ -175,22 +175,68 @@ export function download(filename, content, type = 'text/csv;charset=utf-8') {
 }
 
 // ---------- Pronunciación (voz del navegador, gratis) ----------
+// Cada dispositivo trae voces distintas. Las antiguas de Windows (Microsoft Hazel,
+// George, David, Zira…) suenan muy robóticas; las "Natural/Online" de Edge, las
+// "Google …" de Chrome y las "Enhanced/Premium" de Apple suenan mucho más naturales.
 let voice = null;
-function pickVoice() {
-  const vs = window.speechSynthesis?.getVoices() || [];
-  voice = vs.find((v) => /en-GB/i.test(v.lang)) || vs.find((v) => /^en/i.test(v.lang)) || null;
+let preferredURI = '';
+const voiceListeners = new Set();
+
+/** Puntuación de calidad de una voz inglesa (más alta = más natural) */
+function voiceScore(v) {
+  let s = 0;
+  const n = v.name;
+  if (/natural|neural/i.test(n)) s += 50;
+  if (/online/i.test(n)) s += 20;
+  if (/google/i.test(n)) s += 40;
+  if (/enhanced|premium|siri/i.test(n)) s += 30;
+  if (/^microsoft (hazel|george|susan|david|zira|mark|james|catherine|linda|richard)\b/i.test(n) && !/online|natural/i.test(n)) s -= 30;
+  if (/en[-_]GB/i.test(v.lang)) s += 6;
+  else if (/en[-_]US/i.test(v.lang)) s += 4;
+  else s += 1;
+  if (!v.localService) s += 2;
+  return s;
 }
+
+/** Voces en inglés, de la más natural a la menos */
+export function englishVoices() {
+  const vs = window.speechSynthesis?.getVoices() || [];
+  return vs.filter((v) => /^en([-_]|$)/i.test(v.lang)).sort((a, b) => voiceScore(b) - voiceScore(a));
+}
+
+export const isNaturalVoice = (v) => voiceScore(v) >= 30;
+
+function pickVoice() {
+  const list = englishVoices();
+  voice = list.find((v) => v.voiceURI === preferredURI) || list[0] || null;
+  voiceListeners.forEach((fn) => fn());
+}
+
+/** Voz elegida en Ajustes ('' = automática, la más natural disponible) */
+export function setPreferredVoice(uri) { preferredURI = uri || ''; pickVoice(); }
+export function onVoicesChanged(fn) { voiceListeners.add(fn); return () => voiceListeners.delete(fn); }
+
 if ('speechSynthesis' in window) {
   pickVoice();
-  window.speechSynthesis.onvoiceschanged = pickVoice;
+  window.speechSynthesis.addEventListener?.('voiceschanged', pickVoice);
 }
 export const canSpeak = () => 'speechSynthesis' in window;
+
+/**
+ * Lee un texto en inglés. "go, went, gone" o "was, were" se leen como palabras
+ * separadas, con una pausa natural entre ellas (no se lee la coma ni la barra).
+ */
 export function speak(text) {
   if (!canSpeak() || !text) return;
-  window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(String(text).replace(/,/g, ', '));
+  const synth = window.speechSynthesis;
+  synth.cancel();
+  if (!voice) pickVoice();
+  const parts = String(text).split(/[,/;]+/).map((p) => p.trim()).filter(Boolean);
+  const u = new SpeechSynthesisUtterance(parts.join('. ') + '.');
   u.lang = voice?.lang || 'en-GB';
   if (voice) u.voice = voice;
-  u.rate = 0.9;
-  window.speechSynthesis.speak(u);
+  u.rate = voice && isNaturalVoice(voice) ? 0.95 : 0.85;
+  u.pitch = 1;
+  // Chrome a veces se queda "pausado" tras cancel(); esto lo despierta
+  setTimeout(() => { synth.resume(); synth.speak(u); }, 60);
 }
