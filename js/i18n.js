@@ -38,6 +38,10 @@ const es = {
   'home.yourVerbs': 'Tus verbos', 'home.verbCount': 'Tienes {visible} verbos abiertos de {total}.',
   'home.weekCount': '{open} de {total} semanas abiertas.', 'home.records': 'Tus récords',
 
+  'noweeks.student': 'Tu profe todavía no ha abierto ninguna semana de esta lista. Mientras tanto, puedes practicar y estudiar con «Todo el listado» ({n} verbos).',
+  'noweeks.admin': 'Esta lista tiene {n} verbos, pero ninguna semana abierta. Tus alumnos no verán verbos en «Abiertos» hasta que abras alguna.',
+  'noweeks.openWeeks': 'Abrir semanas', 'noweeks.useAll': 'Usar todo el listado', 'noweeks.seeAll': 'Ver todos los verbos',
+
   'mode.meaning.title': 'Del español al inglés', 'mode.meaning.short': 'Español → inglés',
   'mode.meaning.desc': 'Te damos el significado y escribes infinitivo, pasado y participio.',
   'mode.random.title': 'Pista sorpresa', 'mode.random.short': 'Pista sorpresa',
@@ -201,6 +205,10 @@ const en = {
   'home.adminHint': 'In the teacher panel you can open weeks, edit verbs and create groups.',
   'home.yourVerbs': 'Your verbs', 'home.verbCount': 'You have {visible} open verbs out of {total}.',
   'home.weekCount': '{open} of {total} weeks open.', 'home.records': 'Your records',
+
+  'noweeks.student': 'Your teacher has not opened any week of this list yet. Meanwhile, you can practise and study with "The whole list" ({n} verbs).',
+  'noweeks.admin': 'This list has {n} verbs but no open weeks. Your students will not see any verbs in "Open" until you open some.',
+  'noweeks.openWeeks': 'Open weeks', 'noweeks.useAll': 'Use the whole list', 'noweeks.seeAll': 'See all verbs',
 
   'mode.meaning.title': 'Spanish to English', 'mode.meaning.short': 'Spanish → English',
   'mode.meaning.desc': 'We give you the meaning and you write the infinitive, past and participle.',

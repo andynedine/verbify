@@ -3,7 +3,7 @@ import { api, state, prefs, visibleVerbs, weeksOf, unlockedSet } from '../state.
 import { t } from '../i18n.js';
 import { esc, FIELDS, shuffle, splitAlts, isCorrect, showAlts, fmtTime, speak, canSpeak, score } from '../utils.js';
 import { $, $$, confirmBox, celebrate, shake, toast } from '../ui.js';
-import { listSelector, bindListSelector } from './home.js';
+import { listSelector, bindListSelector, noWeeksNotice, bindNoWeeks, hasNoOpenWeeks } from './home.js';
 
 const MAX_ATTEMPTS = 3;
 const setup = { mode: 'meaning', source: 'visible', weeks: [], count: 'all', timer: null };
@@ -32,6 +32,10 @@ function renderSetup(root) {
   stopTimer();
   quiz = null;
   if (setup.timer === null) setup.timer = prefs.timer;
+  // Sin semanas abiertas: propone directamente "Todo el listado"
+  // (y vuelve a "Todos los abiertos" en cuanto el profe abra alguna semana)
+  if (hasNoOpenWeeks() && setup.source === 'visible') { setup.source = 'all'; setup.autoAll = true; }
+  else if (!hasNoOpenWeeks() && setup.autoAll) { setup.source = 'visible'; setup.autoAll = false; }
   const weeks = weeksOf(state.verbs);
   const unlocked = unlockedSet();
   setup.weeks = setup.weeks.filter((w) => weeks.includes(w));
@@ -40,6 +44,7 @@ function renderSetup(root) {
   root.innerHTML = `
     <h1>🎯 ${esc(t('practice.title'))}</h1>
     ${listSelector('list-select-p')}
+    ${noWeeksNotice()}
     <form id="setup" class="stack" novalidate>
       <fieldset class="card">
         <legend>${esc(t('practice.modeLegend'))}</legend>
@@ -122,7 +127,12 @@ function renderSetup(root) {
     const k = setup.count === 'all' ? pool.length : Math.min(Number(setup.count), pool.length);
     startQuiz(root, pool.slice(0, k), false);
   });
-  bindListSelector(root, () => renderSetup(root), 'list-select-p');
+  bindListSelector(root, () => { setup.source = 'visible'; renderSetup(root); }, 'list-select-p');
+  bindNoWeeks(root, () => {
+    form.querySelector('input[name=source][value=all]').checked = true;
+    update();
+    form.querySelector('#start').focus();
+  });
 }
 
 // ===================== QUIZ =====================

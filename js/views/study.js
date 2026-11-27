@@ -3,7 +3,7 @@ import { state, prefs, visibleVerbs, weeksOf, unlockedSet, patternName } from '.
 import { t } from '../i18n.js';
 import { esc, showAlts, normalize, byInfinitive, speak, canSpeak } from '../utils.js';
 import { $ } from '../ui.js';
-import { listSelector, bindListSelector } from './home.js';
+import { listSelector, bindListSelector, noWeeksNotice, bindNoWeeks } from './home.js';
 
 const view = { scope: 'visible', sort: 'alpha', q: '', hide: false };
 
@@ -49,7 +49,15 @@ function renderList(root) {
   verbs.sort(byInfinitive);
   const box = $('#study-list', root);
   if (!verbs.length) {
-    box.innerHTML = `<p class="callout callout-warn">${esc(view.scope === 'visible' && !q ? t('practice.noneVisible') : t('study.empty'))}</p>`;
+    const notice = view.scope === 'visible' && !q ? noWeeksNotice('see') : '';
+    box.innerHTML = notice || `<p class="callout callout-warn">${esc(view.scope === 'visible' && !q ? t('practice.noneVisible') : t('study.empty'))}</p>`;
+    bindNoWeeks(box, () => {
+      view.scope = 'all';
+      const r = root.querySelector('input[name=scope][value=all]');
+      r.checked = true;
+      renderList(root);
+      r.focus();
+    });
     return;
   }
   const order = state.patterns.map((p) => p.id);

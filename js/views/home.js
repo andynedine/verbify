@@ -1,5 +1,5 @@
 // ---------- Inicio ----------
-import { api, state, isAdmin, useList, visibleVerbs, weeksOf } from '../state.js';
+import { api, state, isAdmin, isSuper, useList, visibleVerbs, weeksOf } from '../state.js';
 import { t } from '../i18n.js';
 import { esc, fmtTime, todayKey } from '../utils.js';
 import { $, showError } from '../ui.js';
@@ -29,6 +29,36 @@ export function bindListSelector(root, onChange, id = 'list-select') {
       onChange();
     } catch (e) { showError(e); }
   });
+}
+
+/** ¿La lista activa tiene verbos pero ninguna semana abierta? */
+export const hasNoOpenWeeks = () => state.verbs.length > 0 && visibleVerbs().length === 0;
+const canEditActive = () => !!state.list && (isSuper() || (isAdmin() && state.list.owner_id === state.profile.id));
+
+/**
+ * Aviso cuando la lista tiene verbos pero ninguna semana abierta.
+ * allAction: 'use' (Practicar), 'see' (Estudiar) o null.
+ */
+export function noWeeksNotice(allAction = null) {
+  if (!hasNoOpenWeeks()) return '';
+  const n = state.verbs.length;
+  const admin = canEditActive();
+  return `
+    <div class="callout callout-warn notice-noweeks" role="status">
+      <p>📅 ${esc(admin ? t('noweeks.admin', { n }) : t('noweeks.student', { n }))}</p>
+      <div class="btn-row">
+        ${admin ? `<button type="button" class="btn btn-primary btn-small" data-open-weeks>🔓 ${esc(t('noweeks.openWeeks'))}</button>` : ''}
+        ${allAction ? `<button type="button" class="btn btn-secondary btn-small" data-use-all>${esc(t(allAction === 'use' ? 'noweeks.useAll' : 'noweeks.seeAll'))}</button>` : ''}
+      </div>
+    </div>`;
+}
+
+export function bindNoWeeks(root, onUseAll) {
+  root.querySelector('[data-open-weeks]')?.addEventListener('click', () => {
+    try { sessionStorage.setItem('verbify-admin-list', state.list.id); } catch { /* ignore */ }
+    location.hash = '#/admin/semanas';
+  });
+  root.querySelector('[data-use-all]')?.addEventListener('click', () => onUseAll?.());
 }
 
 function recordTile(records, mode) {
@@ -81,6 +111,7 @@ export async function render(root, { rerender }) {
       ${listSelector()}
       <p>${t('home.verbCount', { visible: `<strong>${visible.length}</strong>`, total: `<strong>${state.verbs.length}</strong>` })}</p>
       <p class="muted">${esc(t('home.weekCount', { open, total: weeks.length }))}</p>
+      ${noWeeksNotice()}
       <div class="actions-grid">
         <a class="action-tile tile-practice" href="#/practicar"><span aria-hidden="true">🎯</span>${esc(t('nav.practice'))}</a>
         <a class="action-tile tile-study" href="#/estudiar"><span aria-hidden="true">📚</span>${esc(t('nav.study'))}</a>
@@ -97,4 +128,5 @@ export async function render(root, { rerender }) {
     </section>`;
 
   bindListSelector(root, rerender);
+  bindNoWeeks(root);
 }

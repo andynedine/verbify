@@ -48,11 +48,20 @@ function readCache() {
   try { return JSON.parse(localStorage.getItem(CACHE_KEY) || 'null'); } catch { return null; }
 }
 
-/** Listas accesibles: maestra + propias + las de mis grupos (superadmin: todas) */
+/**
+ * Listas que se muestran según el rol:
+ *  - superadmin: todas
+ *  - profe: la suya + la maestra (referencia) + las de sus grupos
+ *  - alumno: solo las de sus grupos; si aún no está en ninguno, la maestra
+ */
 function accessible(all, profile, groups) {
   if (profile.role === 'superadmin') return all;
   const ids = new Set(groups.map((g) => g.list_id).filter(Boolean));
-  return all.filter((l) => l.is_master || l.owner_id === profile.id || ids.has(l.id));
+  if (profile.role === 'admin') {
+    return all.filter((l) => l.is_master || l.owner_id === profile.id || ids.has(l.id));
+  }
+  const fromGroups = all.filter((l) => ids.has(l.id));
+  return fromGroups.length ? fromGroups : all.filter((l) => l.is_master);
 }
 
 function sortLists(lists, profile) {
@@ -73,7 +82,8 @@ export async function loadAll() {
         || state.lists.find((l) => groups.some((g) => g.list_id === l.id))
         || state.lists[0] || null;
     }
-    await useList(list, false);
+    // Si la lista guardada ya no está disponible (p. ej. salió del grupo), recuerda la nueva
+    await useList(list, !!list && list.id !== state.profile.active_list_id);
     state.offline = false;
     writeCache();
   } catch (e) {
