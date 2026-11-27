@@ -2,6 +2,7 @@
 import { prefs } from './state.js';
 
 const es = {
+  'menu.account': 'Menú de tu cuenta ({nick})',
   'nav.home': 'Inicio', 'nav.practice': 'Practicar', 'nav.study': 'Estudiar', 'nav.groups': 'Grupos',
   'nav.admin': 'Profe', 'nav.settings': 'Ajustes', 'nav.main': 'Menú principal', 'nav.skip': 'Saltar al contenido',
 
@@ -173,6 +174,7 @@ const es = {
 };
 
 const en = {
+  'menu.account': 'Your account menu ({nick})',
   'nav.home': 'Home', 'nav.practice': 'Practise', 'nav.study': 'Study', 'nav.groups': 'Groups',
   'nav.admin': 'Teacher', 'nav.settings': 'Settings', 'nav.main': 'Main menu', 'nav.skip': 'Skip to content',
 

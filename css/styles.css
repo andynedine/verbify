@@ -569,3 +569,25 @@ h1[tabindex="-1"]:focus { outline: none; }
 /* Selector de voz */
 .voice-row { display: flex; flex-wrap: wrap; gap: .5rem; align-items: center; }
 .voice-row select { flex: 1 1 200px; min-width: 0; }
+
+/* Menú del nick */
+.user-chip { position: relative; }
+.chip-btn {
+  display: flex; align-items: center; gap: .45rem; min-height: 44px; max-width: 100%; padding: .2rem .55rem .2rem .25rem;
+  border: 2px solid transparent; border-radius: 999px; background: transparent; cursor: pointer; font-weight: 800; color: var(--text);
+}
+.chip-btn:hover, .chip-btn[aria-expanded="true"] { background: var(--surface-2); border-color: var(--border); }
+.chip-caret { color: var(--muted); font-size: .8rem; }
+.user-menu {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 50; min-width: 220px; max-width: calc(100vw - 32px);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-sm); box-shadow: var(--shadow);
+  padding: .4rem; display: flex; flex-direction: column; gap: 2px;
+}
+.user-menu-head { margin: 0; padding: .5rem .7rem .6rem; border-bottom: 1px solid var(--border); margin-bottom: .3rem; display: flex; flex-direction: column; overflow-wrap: anywhere; }
+.user-menu-head small { color: var(--muted); font-weight: 700; }
+.user-menu-item {
+  display: flex; align-items: center; gap: .5rem; width: 100%; min-height: 44px; padding: .5rem .7rem; border: 0; border-radius: 10px;
+  background: transparent; color: var(--text); font-weight: 800; text-align: left; text-decoration: none; cursor: pointer;
+}
+.user-menu-item:hover, .user-menu-item:focus-visible { background: var(--surface-2); }
+.user-menu-item.danger { color: var(--bad); }

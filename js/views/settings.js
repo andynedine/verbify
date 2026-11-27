@@ -4,6 +4,7 @@ import { t, applyLang } from '../i18n.js';
 import { esc, canSpeak, speak, englishVoices, isNaturalVoice, setPreferredVoice, onVoicesChanged } from '../utils.js';
 import { $, toast, showError, confirmBox, openDialog } from '../ui.js';
 import { applyTheme, reloadSession } from '../app.js';
+import { logout, changePassword } from '../account.js';
 
 const ROLE = { student: 'role.student', admin: 'role.admin', superadmin: 'role.superadmin' };
 
@@ -71,7 +72,7 @@ export function render(root, { rerender }) {
       <button class="btn btn-danger" id="reset-demo">${esc(t('demo.reset'))}</button>
     </section>` : ''}
 
-    <p class="muted small center">Verbify v1.2.1 · ${esc(t('settings.privacy'))}</p>`;
+    <p class="muted small center">Verbify v1.3 · ${esc(t('settings.privacy'))}</p>`;
 
   const form = $('#prefs', root);
   form.addEventListener('change', (e) => {
@@ -102,30 +103,8 @@ export function render(root, { rerender }) {
     speak('go, went, gone');
   });
 
-  $('#logout', root)?.addEventListener('click', async () => {
-    if (!(await confirmBox(t('settings.logoutConfirm'), { okText: t('settings.logout') }))) return;
-    await api.signOut();
-    state.profile = null;
-    state.groups = []; state.lists = []; state.verbs = []; state.list = null;
-    try { localStorage.removeItem('verbify-cache'); } catch { /* ignore */ }
-    location.hash = '#/entrar';
-  });
-
-  $('#chg-pwd', root)?.addEventListener('click', () => openDialog({
-    title: t('settings.changePwd'),
-    body: `<div class="field"><label for="np">${esc(t('settings.newPwd'))}</label>
-      <input id="np" name="np" type="password" minlength="6" required autocomplete="new-password"></div>
-      <div class="field"><label for="np2">${esc(t('auth.password2'))}</label>
-      <input id="np2" name="np2" type="password" minlength="6" required autocomplete="new-password"></div>`,
-    okText: t('common.save'),
-    onSubmit: async (f) => {
-      if (f.np.value.length < 6) throw t('err.WEAK_PASSWORD');
-      if (f.np.value !== f.np2.value) throw t('auth.pwdMismatch');
-      await api.changePassword(f.np.value);
-      toast(t('settings.pwdChanged'), 'ok');
-      return true;
-    },
-  }));
+  $('#logout', root)?.addEventListener('click', logout);
+  $('#chg-pwd', root)?.addEventListener('click', changePassword);
 
   $('#reset-demo', root)?.addEventListener('click', async () => {
     if (!(await confirmBox(t('demo.resetConfirm'), { danger: true, okText: t('demo.reset') }))) return;

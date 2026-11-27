@@ -10,6 +10,7 @@ import * as studyView from './views/study.js';
 import * as groupsView from './views/groups.js';
 import * as adminView from './views/admin.js';
 import * as settingsView from './views/settings.js';
+import { logout, changePassword } from './account.js';
 
 const ROUTES = {
   '': { view: homeView, auth: true, nav: 'home' },
@@ -54,8 +55,19 @@ export function renderShell(active) {
   $('#bottomnav').hidden = !logged;
   $('#topnav').setAttribute('aria-label', t('nav.main'));
   $('#bottomnav').setAttribute('aria-label', t('nav.main'));
+  const p = state.profile;
   $('#user-chip').innerHTML = logged
-    ? `<span class="chip-avatar" aria-hidden="true">${esc(state.profile.nick[0].toUpperCase())}</span><span class="chip-nick">${esc(state.profile.nick)}</span>`
+    ? `<button type="button" class="chip-btn" id="user-btn" aria-expanded="false" aria-controls="user-menu"
+          aria-label="${esc(t('menu.account', { nick: p.nick }))}">
+        <span class="chip-avatar" aria-hidden="true">${esc(p.nick[0].toUpperCase())}</span>
+        <span class="chip-nick">${esc(p.nick)}</span><span class="chip-caret" aria-hidden="true">▾</span>
+      </button>
+      <div class="user-menu" id="user-menu" hidden>
+        <p class="user-menu-head"><strong>${esc(p.nick)}</strong><small>${esc(t('role.' + p.role))}</small></p>
+        <a class="user-menu-item" href="#/ajustes">⚙️ ${esc(t('nav.settings'))}</a>
+        <button type="button" class="user-menu-item" data-account="pwd">🔑 ${esc(t('settings.changePwd'))}</button>
+        <button type="button" class="user-menu-item danger" data-account="logout">🚪 ${esc(t('settings.logout'))}</button>
+      </div>`
     : `<a class="btn btn-small btn-ghost" href="#/ajustes" aria-label="${esc(t('nav.settings'))}">⚙️</a>`;
   $('.skip-link').textContent = t('nav.skip');
   $('#demo-banner').hidden = !isDemo();
@@ -63,6 +75,39 @@ export function renderShell(active) {
   $('#offline-banner').hidden = !state.offline;
   $('#offline-banner').textContent = t('offline.banner');
   document.body.classList.toggle('logged', logged);
+}
+
+// ---------- Menú del nick (arriba a la derecha) ----------
+function setUserMenu(open, focusFirst = false) {
+  const btn = $('#user-btn');
+  const menu = $('#user-menu');
+  if (!btn || !menu) return;
+  menu.hidden = !open;
+  btn.setAttribute('aria-expanded', String(open));
+  if (open && focusFirst) menu.querySelector('.user-menu-item')?.focus();
+}
+
+function bindUserMenu() {
+  document.addEventListener('click', (e) => {
+    if (e.target.closest('#user-btn')) {
+      const open = $('#user-menu')?.hidden;
+      setUserMenu(open, open && e.detail === 0); // teclado: foco en la 1ª opción
+      return;
+    }
+    const action = e.target.closest('[data-account]')?.dataset.account;
+    if (action || e.target.closest('.user-menu-item') || !e.target.closest('#user-menu')) setUserMenu(false);
+    if (action === 'pwd') changePassword();
+    if (action === 'logout') logout();
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && $('#user-menu') && !$('#user-menu').hidden) {
+      setUserMenu(false);
+      $('#user-btn')?.focus();
+    }
+  });
+  document.addEventListener('focusin', (e) => {
+    if (!e.target.closest('#user-chip')) setUserMenu(false);
+  });
 }
 
 function parseHash() {
@@ -112,6 +157,7 @@ async function start() {
     await loadAll();
   } catch (e) { showError(e); }
   window.addEventListener('hashchange', route);
+  bindUserMenu();
   window.addEventListener('online', () => { if (state.offline) reloadSession(location.hash || '#/'); });
   route();
 
