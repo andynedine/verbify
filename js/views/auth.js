@@ -2,31 +2,10 @@
 import { api } from '../state.js';
 import { t } from '../i18n.js';
 import { esc } from '../utils.js';
-import { $, $$, errorText } from '../ui.js';
+import { $, errorText, pwdField } from '../ui.js';
 import { reloadSession } from '../app.js';
 
 const NICK_RE = /^[A-Za-z0-9_.-]{3,20}$/;
-
-function pwdField(id, label, autocomplete) {
-  return `
-    <div class="field">
-      <label for="${id}">${esc(label)}</label>
-      <div class="pwd-wrap">
-        <input id="${id}" name="${id}" type="password" required minlength="6" autocomplete="${autocomplete}" autocapitalize="off" spellcheck="false">
-        <button type="button" class="pwd-toggle" data-toggle="${id}" aria-label="${esc(t('auth.showPwd'))}" aria-pressed="false">👁️</button>
-      </div>
-    </div>`;
-}
-
-function bindPwdToggles(root) {
-  $$('[data-toggle]', root).forEach((b) => b.addEventListener('click', () => {
-    const inp = $('#' + b.dataset.toggle, root);
-    const show = inp.type === 'password';
-    inp.type = show ? 'text' : 'password';
-    b.setAttribute('aria-pressed', String(show));
-    b.setAttribute('aria-label', show ? t('auth.hidePwd') : t('auth.showPwd'));
-  }));
-}
 
 function hero() {
   return `
@@ -55,7 +34,6 @@ function renderLogin(root) {
       <p class="center">${esc(t('auth.noAccount'))}</p>
       <a class="btn btn-secondary btn-block" href="#/registro">${esc(t('auth.createAccount'))}</a>
     </section>`;
-  bindPwdToggles(root);
   const form = $('#login-form', root);
   const errBox = $('.form-error', form);
   form.addEventListener('submit', async (e) => {
@@ -106,7 +84,6 @@ function renderRegister(root) {
       <hr>
       <a class="btn btn-ghost btn-block" href="#/entrar">${esc(t('auth.haveAccount'))}</a>
     </section>`;
-  bindPwdToggles(root);
   const form = $('#reg-form', root);
   const bdField = $('#bd-field', root);
   const errBox = $('.form-error', form);

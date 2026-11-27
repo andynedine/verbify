@@ -120,3 +120,31 @@ export function shake(el) {
 export function loading(root) {
   root.innerHTML = `<div class="loading" role="status"><span class="spinner" aria-hidden="true"></span>${esc(t('common.loading'))}</div>`;
 }
+
+// ---------- Campo de contraseña con botón de ver/ocultar ----------
+// Ojo abierto = "pulsa para VER la contraseña"; ojo tachado = "pulsa para OCULTARLA".
+const EYE_OPEN = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_CLOSED = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 19c-7 0-11-7-11-7a18.45 18.45 0 0 1 5.06-5.94"/><path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 7 11 7a18.5 18.5 0 0 1-2.16 3.19"/><path d="M14.12 14.12a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>';
+
+export function pwdField(id, label, autocomplete = 'current-password') {
+  return `
+    <div class="field">
+      <label for="${id}">${esc(label)}</label>
+      <div class="pwd-wrap">
+        <input id="${id}" name="${id}" type="password" required minlength="6" autocomplete="${autocomplete}" autocapitalize="off" spellcheck="false">
+        <button type="button" class="pwd-toggle" data-pwd-toggle aria-label="${esc(t('auth.showPwd'))}">${EYE_OPEN}</button>
+      </div>
+    </div>`;
+}
+
+// Un único manejador para todos los campos de contraseña (pantallas y diálogos)
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-pwd-toggle]');
+  if (!b) return;
+  const inp = b.closest('.pwd-wrap')?.querySelector('input');
+  if (!inp) return;
+  const show = inp.type === 'password';
+  inp.type = show ? 'text' : 'password';
+  b.innerHTML = show ? EYE_CLOSED : EYE_OPEN;
+  b.setAttribute('aria-label', show ? t('auth.hidePwd') : t('auth.showPwd'));
+});
