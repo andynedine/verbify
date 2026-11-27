@@ -594,3 +594,8 @@ h1[tabindex="-1"]:focus { outline: none; }
 
 .pwd-toggle { display: grid; place-items: center; color: var(--muted); }
 .pwd-toggle:hover { color: var(--primary); background: var(--surface-2); }
+
+/* Miembros por grupo (panel del profe) */
+.member-group { margin-bottom: 1.25rem; }
+.member-group-title { display: flex; flex-wrap: wrap; align-items: center; gap: .4rem .6rem; margin-bottom: .5rem; }
+.member-group-title a { text-decoration: none; }

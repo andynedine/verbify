@@ -2,11 +2,11 @@
 import { api, state, isSuper, refreshActiveList, refreshLists } from '../state.js';
 import { t } from '../i18n.js';
 import { esc, showAlts, cleanAlts, normalize, byInfinitive, parseVerbsCsv, toCsv, download } from '../utils.js';
-import { $, $$, toast, showError, confirmBox, openDialog, loading } from '../ui.js';
+import { $, $$, toast, showError, confirmBox, openDialog, alertBox, loading } from '../ui.js';
 import { listLabel } from './home.js';
 
-const TABS = ['verbos', 'semanas', 'patrones', 'importar', 'lista'];
-const ICONS = { verbos: '📝', semanas: '📅', patrones: '🧩', importar: '📥', lista: '📋' };
+const TABS = ['verbos', 'semanas', 'patrones', 'miembros', 'importar', 'lista'];
+const ICONS = { verbos: '📝', semanas: '📅', patrones: '🧩', miembros: '👥', importar: '📥', lista: '📋' };
 const SEL_KEY = 'verbify-admin-list';
 const ui = { q: '', week: '' };
 let data = { list: null, verbs: [], patterns: [] };
@@ -382,6 +382,98 @@ function tabList(box, rerender) {
   });
 }
 
+// ===================== MIEMBROS =====================
+// Alumnos de todos los grupos que ha creado el profe, agrupados por grupo,
+// con el botón de restablecer contraseña siempre a mano.
+const membersUi = { q: '' };
+
+function memberRow(m, g, groups) {
+  const others = groups.filter((o) => o.id !== g.id && o.members.some((x) => x.user_id === m.user_id));
+  return `
+    <li class="member">
+      <span class="member-name">${esc(m.nick)}
+        ${m.role !== 'student' ? `<span class="tag">🧑‍🏫 ${esc(t('groups.adult'))}</span>` : ''}
+        ${m.reset_hint ? `<small class="muted block">${esc(t('groups.resetHint'))}: <code>${esc(m.reset_hint)}</code></small>` : ''}
+        ${others.length ? `<small class="muted block">${esc(t('admin.alsoIn'))}: ${others.map((o) => esc(o.name)).join(', ')}</small>` : ''}
+      </span>
+      <span class="member-actions">
+        ${m.reset_hint ? `<button class="btn btn-small btn-secondary" data-reset="${m.user_id}" data-nick="${esc(m.nick)}">🔑 ${esc(t('groups.reset'))}</button>` : ''}
+        <button class="btn btn-small btn-ghost-danger" data-kick="${m.user_id}" data-group="${g.id}" data-nick="${esc(m.nick)}" data-gname="${esc(g.name)}"
+          aria-label="${esc(t('admin.kickFrom', { nick: m.nick, group: g.name }))}">${esc(t('groups.kick'))}</button>
+      </span>
+    </li>`;
+}
+
+async function tabMembers(box) {
+  loading(box);
+  let groups = [];
+  try {
+    state.groups = await api.myGroups();
+    groups = state.groups.filter((g) => g.is_owner);
+    const lists = await Promise.all(groups.map((g) => api.groupMembers(g.id)));
+    groups = groups.map((g, i) => ({ ...g, members: lists[i].filter((m) => m.user_id !== state.profile.id) }));
+  } catch (e) { showError(e); }
+
+  if (!groups.length) {
+    box.innerHTML = `<p class="callout">👥 ${esc(t('admin.membersNoGroups'))}</p>
+      <a class="btn btn-secondary" href="#/grupos">✨ ${esc(t('groups.create'))}</a>`;
+    return;
+  }
+
+  const draw = () => {
+    const q = normalize(membersUi.q);
+    const total = new Set(groups.flatMap((g) => g.members.map((m) => m.user_id))).size;
+    const sections = groups.map((g) => {
+      const ms = g.members.filter((m) => !q || normalize(m.nick).includes(q));
+      if (q && !ms.length) return '';
+      return `
+        <section class="member-group">
+          <h3 class="member-group-title">
+            <a href="#/grupos/${g.id}">${esc(g.name)}</a>
+            <span class="tag tag-code">#${esc(g.code)}</span>
+            <span class="count">(${g.members.length})</span>
+          </h3>
+          ${ms.length
+            ? `<ul class="member-list">${ms.map((m) => memberRow(m, g, groups)).join('')}</ul>`
+            : `<p class="muted">${esc(t('admin.membersEmpty', { code: g.code }))}</p>`}
+        </section>`;
+    }).join('');
+    $('#members-out', box).innerHTML = `
+      <p class="muted small">${esc(t('admin.membersCount', { n: total, g: groups.length }))}</p>
+      ${sections || `<p class="callout">${esc(t('study.empty'))}</p>`}`;
+  };
+
+  box.innerHTML = `
+    <p class="help">🔑 ${esc(t('groups.resetInfo'))}</p>
+    <div class="field"><label for="mq">${esc(t('admin.searchStudent'))}</label>
+      <input id="mq" type="search" value="${esc(membersUi.q)}" autocomplete="off" autocapitalize="off" spellcheck="false"></div>
+    <div id="members-out" aria-live="polite"></div>`;
+  draw();
+
+  $('#mq', box).addEventListener('input', (e) => { membersUi.q = e.target.value; draw(); });
+  box.addEventListener('click', async (e) => {
+    const r = e.target.closest('[data-reset]');
+    if (r) {
+      if (!(await confirmBox(t('groups.resetConfirm', { nick: r.dataset.nick }), { okText: t('groups.reset') }))) return;
+      try {
+        const pwd = await api.resetPassword(r.dataset.reset);
+        await alertBox(t('groups.resetDone'), `<p>${esc(t('groups.resetDoneMsg', { nick: r.dataset.nick }))}</p><p class="code-big">${esc(pwd)}</p>`);
+      } catch (ex) { showError(ex); }
+      return;
+    }
+    const k = e.target.closest('[data-kick]');
+    if (!k) return;
+    if (!(await confirmBox(t('admin.kickConfirmFrom', { nick: k.dataset.nick, group: k.dataset.gname }), { okText: t('groups.kick'), danger: true }))) return;
+    try {
+      await api.removeMember(k.dataset.group, k.dataset.kick);
+      const g = groups.find((x) => x.id === k.dataset.group);
+      g.members = g.members.filter((m) => m.user_id !== k.dataset.kick);
+      toast(t('groups.kicked'), 'ok');
+      draw();
+    } catch (ex) { showError(ex); }
+  });
+}
+
 // ===================== RENDER =====================
 export async function render(root, { params, rerender }) {
   const tab = TABS.includes(params[0]) ? params[0] : 'verbos';
@@ -415,5 +507,5 @@ export async function render(root, { params, rerender }) {
     rerender();
   });
   const box = $('#tab-box', root);
-  ({ verbos: tabVerbs, semanas: tabWeeks, patrones: tabPatterns, importar: tabImport, lista: tabList })[tab](box, rerender);
+  ({ verbos: tabVerbs, semanas: tabWeeks, patrones: tabPatterns, miembros: tabMembers, importar: tabImport, lista: tabList })[tab](box, rerender);
 }

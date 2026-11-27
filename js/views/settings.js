@@ -72,7 +72,7 @@ export function render(root, { rerender }) {
       <button class="btn btn-danger" id="reset-demo">${esc(t('demo.reset'))}</button>
     </section>` : ''}
 
-    <p class="muted small center">Verbify v1.3.1 · ${esc(t('settings.privacy'))}</p>`;
+    <p class="muted small center">Verbify v1.4 · ${esc(t('settings.privacy'))}</p>`;
 
   const form = $('#prefs', root);
   form.addEventListener('change', (e) => {

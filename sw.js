@@ -1,6 +1,6 @@
 // ---------- Service Worker de Verbify (app instalable y uso sin conexión) ----------
 // Sube el número de versión cada vez que publiques cambios para que los móviles se actualicen.
-const VERSION = 'verbify-v1.3.1';
+const VERSION = 'verbify-v1.4.0';
 const SHELL = [
   './', 'index.html', 'manifest.webmanifest', 'css/styles.css',
   'js/app.js', 'js/account.js', 'js/config.js', 'js/state.js', 'js/i18n.js', 'js/ui.js', 'js/utils.js',
